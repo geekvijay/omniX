@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OmniX",
   "version": "1.0.0",
-  "action": { "default_popup": "index.html" },
+  "action": {},
   "content_scripts": [
     {
       "js": ["src/content/index.tsx"],
@@ -12,5 +12,6 @@
   "background": {
     "service_worker": "src/background.ts",
     "type": "module"
-  }
+  },
+  "permissions": ["tabs", "activeTab"]
 }

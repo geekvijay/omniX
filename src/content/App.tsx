@@ -1,57 +1,64 @@
 import { useState, useEffect, useRef } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '../components/Modal';
-import { Action } from '../types';
-import { TOGGLE_OMNIX } from '../constants';
-
-interface Item {
-  id: number;
-  name: string;
-}
-
-const initialItems: Item[] = [
-  { id: 1, name: 'Item 1' },
-  { id: 2, name: 'Item 2' },
-  { id: 3, name: 'Item 3' },
-  { id: 4, name: 'Item 4' },
-  { id: 5, name: 'Item 5' },
-  { id: 6, name: 'Item 6' },
-  { id: 7, name: 'Item 7' },
-  { id: 8, name: 'Item 8' },
-  { id: 9, name: 'Item 9' },
-  { id: 10, name: 'Item 10' },
-  { id: 11, name: 'Item 11' },
-  { id: 12, name: 'Item 12' },
-  { id: 13, name: 'Item 13' },
-  { id: 14, name: 'Item 14' },
-  { id: 15, name: 'Item 15' },
-  { id: 16, name: 'Item 16' },
-  { id: 17, name: 'Item 17' },
-  { id: 18, name: 'Item 18' },
-  { id: 19, name: 'Item 19' },
-];
+import { Message, Command } from '../types';
+import * as c from '../constants';
 
 const App = () => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [items, setItems] = useState<Item[]>(initialItems);
+  const [items, setItems] = useState<Command[]>([]);
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  let filteredItems = items.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
-  filteredItems = search ? [{ id: 0, name: search }, ...filteredItems] : filteredItems;
+  let filteredItems = items.filter((item) => item.title.toLowerCase().includes(search.toLowerCase()));
+  filteredItems = search
+    ? [
+        { title: search, message: { type: c.SEARCH_QUERY, payload: search }, description: 'Search for a query' },
+        ...filteredItems,
+      ]
+    : filteredItems;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
     setIndex(0);
   };
 
+  const handleSelect = (item: Command) => {
+    setOpen(false);
+    switch (item.message.type) {
+      case c.BROWSER_FULLSCREEN:
+        document.documentElement.requestFullscreen();
+        break;
+      case c.BROWSER_PRINT:
+        setTimeout(() => window.print(), 100);
+        break;
+      case c.BROWSER_SCROLL_TO_BOTTOM:
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        break;
+      case c.BROWSER_SCROLL_TO_TOP:
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        break;
+      default:
+        dispatch(item.message);
+        break;
+    }
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        setIndex((prevIndex) => (prevIndex >= filteredItems.length - 1 ? prevIndex : prevIndex + 1));
-      } else if (e.key === 'ArrowUp') {
-        setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
+      switch (e.key) {
+        case 'ArrowDown':
+          setIndex((prevIndex) => (prevIndex >= filteredItems.length - 1 ? prevIndex : prevIndex + 1));
+          break;
+        case 'ArrowUp':
+          setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
+          break;
+        case 'Enter':
+          handleSelect(filteredItems[index]);
+          break;
+        default:
+          break;
       }
     };
 
@@ -70,16 +77,21 @@ const App = () => {
 
   useEffect(() => {
     if (open) {
+      dispatch({ type: c.COMMANDS_QUERY });
       setSearch('');
       inputRef.current?.focus();
     }
   }, [open]);
 
   useEffect(() => {
-    const handleMessage = (message: Action) => {
+    const handleMessage = (message: Message) => {
+      console.log(message);
       switch (message.type) {
-        case TOGGLE_OMNIX:
+        case c.TOGGLE_OMNIX:
           setOpen((prev) => !prev);
+          break;
+        case c.COMMANDS_QUERY_SUCCESS:
+          setItems(message.payload);
           break;
         default:
           break;
@@ -89,6 +101,8 @@ const App = () => {
     chrome.runtime.onMessage.addListener(handleMessage);
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
+
+  const dispatch = (message: Message) => chrome.runtime.sendMessage(message);
 
   return (
     <>
@@ -108,11 +122,12 @@ const App = () => {
           <div ref={listRef}>
             {filteredItems.map((item, i) => (
               <div
-                key={item.id}
+                key={item.title}
                 data-index={i}
                 className={`omnix-p-2 ${index === i ? 'omnix-bg-blue-500' : 'omnix-bg-white'}`}
+                onClick={() => handleSelect(item)}
               >
-                {item.name}
+                {item.title}
               </div>
             ))}
           </div>

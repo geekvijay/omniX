@@ -1,4 +1,10 @@
-export type Action = {
+export type Message = {
   type: string;
-  payload: any;
+  payload?: any;
+};
+
+export type Command = {
+  title: string;
+  description: string;
+  message: Message;
 };

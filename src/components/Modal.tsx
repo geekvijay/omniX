@@ -21,7 +21,7 @@ const Modal = ({ open, onClose = noop, children }: Props) => {
   return (
     <div
       onClick={onClose}
-      className="omnix-fixed omnix-inset-0 omnix-flex omnix-items-center omnix-justify-center omnix-bg-black omnix-bg-opacity-50"
+      className="omnix-fixed omnix-inset-0 omnix-z-[9999] omnix-flex omnix-items-center omnix-justify-center omnix-bg-black omnix-bg-opacity-50"
     >
       <div onClick={(e) => e.stopPropagation()} className="omnix-flex omnix-flex-col omnix-rounded-md omnix-bg-white">
         {children}

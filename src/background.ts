@@ -6,7 +6,16 @@ const searchQuery = (text: string) => chrome.search.query({ text });
 
 const commandsQuery = async (text: string) => {
   const response = await commands.query(text);
-  dispatch({ type: c.COMMANDS_QUERY_SUCCESS, payload: response });
+  return response;
+};
+
+const tabsQuery = async (text: string) => {
+  let tabs = await chrome.tabs.query(text ? { title: text } : {});
+  tabs = tabs.map((tab) => ({
+    ...tab,
+    message: { type: c.TABS_HIGHLIGHT, payload: tab },
+  }));
+  return tabs;
 };
 
 const tabsCurrent = async () => {
@@ -53,9 +62,26 @@ const tabsGoForward = async () => {
   chrome.tabs.goForward(tab.id);
 };
 
+const tabsHighlight = async (tab) => {
+  chrome.tabs.highlight({ tabs: tab.index, windowId: tab.windowId });
+  chrome.windows.update(tab.windowId, { focused: true });
+};
+
 const bookmarksCreate = async () => {
   const tab = await tabsCurrent();
   chrome.bookmarks.create({ title: tab.title, url: tab.url });
+};
+
+const bookmarksQuery = async (text: string) => {
+  const query = text || {};
+  let bookmarks = await chrome.bookmarks.search(query);
+  bookmarks = bookmarks
+    .filter((bookmark) => bookmark.url !== undefined)
+    .map((bookmark) => ({
+      ...bookmark,
+      message: { type: c.TABS_CREATE, payload: bookmark.url },
+    }));
+  return bookmarks;
 };
 
 const windowsCreateIncognito = async () => {
@@ -108,6 +134,14 @@ const browsingDataRemovePasswords = async () => {
   chrome.browsingData.removePasswords({ since: 0 });
 };
 
+const defaultQuery = async (text: string) => {
+  const [tabs, commands, bookmarks] = await Promise.all([tabsQuery(text), commandsQuery(text), bookmarksQuery(text)]);
+  const search = text
+    ? [{ title: text, message: { type: c.SEARCH_QUERY, payload: text }, description: 'Search for a query' }]
+    : [];
+  return [...search, ...tabs, ...commands, ...bookmarks];
+};
+
 const dispatch = async (message: Message) => {
   const tab = await tabsCurrent();
   const response = await chrome.tabs.sendMessage(tab.id, message);
@@ -118,11 +152,18 @@ chrome.action.onClicked.addListener((tab) => {
   dispatch({ type: c.TOGGLE_OMNIX });
 });
 
-chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse) => {
   switch (message.type) {
-    case c.COMMANDS_QUERY:
-      commandsQuery(message.payload);
+    case c.DEFAULT_QUERY: {
+      const payload = await defaultQuery(message.payload);
+      dispatch({ type: c.DEFAULT_QUERY_SUCCESS, payload });
       break;
+    }
+    case c.COMMANDS_QUERY: {
+      const payload = await commandsQuery(message.payload);
+      dispatch({ type: c.COMMANDS_QUERY_SUCCESS, payload });
+      break;
+    }
     case c.SEARCH_QUERY:
       searchQuery(message.payload);
       break;
@@ -149,6 +190,9 @@ chrome.runtime.onMessage.addListener((message: Message, sender, sendResponse) =>
       break;
     case c.TABS_GO_FORWARD:
       tabsGoForward();
+      break;
+    case c.TABS_HIGHLIGHT:
+      tabsHighlight(message.payload);
       break;
     case c.BOOKMARKS_CREATE:
       bookmarksCreate();

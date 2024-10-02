@@ -297,5 +297,5 @@ export const query = async (text: string) => {
     },
   ];
 
-  return commands;
+  return text ? commands.filter((command) => command.title.toLowerCase().includes(text.toLowerCase())) : commands;
 };

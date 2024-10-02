@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '../components/Modal';
 import { Message, Command } from '../types';
 import * as c from '../constants';
@@ -11,20 +11,13 @@ const App = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  let filteredItems = items.filter((item) => item.title.toLowerCase().includes(search.toLowerCase()));
-  filteredItems = search
-    ? [
-        { title: search, message: { type: c.SEARCH_QUERY, payload: search }, description: 'Search for a query' },
-        ...filteredItems,
-      ]
-    : filteredItems;
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch({ type: c.DEFAULT_QUERY, payload: e.target.value });
     setSearch(e.target.value);
     setIndex(0);
   };
 
-  const handleSelect = (item: Command) => {
+  const handleSelect = useCallback((item: Command) => {
     setOpen(false);
     switch (item.message.type) {
       case c.BROWSER_FULLSCREEN:
@@ -43,19 +36,19 @@ const App = () => {
         dispatch(item.message);
         break;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
         case 'ArrowDown':
-          setIndex((prevIndex) => (prevIndex >= filteredItems.length - 1 ? prevIndex : prevIndex + 1));
+          setIndex((prevIndex) => (prevIndex >= items.length - 1 ? prevIndex : prevIndex + 1));
           break;
         case 'ArrowUp':
           setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
           break;
         case 'Enter':
-          handleSelect(filteredItems[index]);
+          handleSelect(items[index]);
           break;
         default:
           break;
@@ -64,7 +57,7 @@ const App = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [index, filteredItems]);
+  }, [index, items, handleSelect]);
 
   useEffect(() => {
     if (listRef.current) {
@@ -77,7 +70,7 @@ const App = () => {
 
   useEffect(() => {
     if (open) {
-      dispatch({ type: c.COMMANDS_QUERY });
+      dispatch({ type: c.DEFAULT_QUERY });
       setSearch('');
       inputRef.current?.focus();
     }
@@ -90,7 +83,7 @@ const App = () => {
         case c.TOGGLE_OMNIX:
           setOpen((prev) => !prev);
           break;
-        case c.COMMANDS_QUERY_SUCCESS:
+        case c.DEFAULT_QUERY_SUCCESS:
           setItems(message.payload);
           break;
         default:
@@ -120,10 +113,8 @@ const App = () => {
         </ModalHeader>
         <ModalContent>
           <div ref={listRef}>
-            {filteredItems.map((item, i) => (
+            {items.map((item, i) => (
               <div
-                key={item.title}
-                data-index={i}
                 className={`omnix-p-2 ${index === i ? 'omnix-bg-blue-500' : 'omnix-bg-white'}`}
                 onClick={() => handleSelect(item)}
               >
@@ -134,7 +125,7 @@ const App = () => {
         </ModalContent>
         <ModalFooter>
           <div className="omnix-flex omnix-items-center omnix-justify-between">
-            <span className="omnix-text-sm omnix-text-gray-500">{filteredItems.length} results</span>
+            <span className="omnix-text-sm omnix-text-gray-500">{items.length} results</span>
             <div className="omnix-text-sm omnix-text-gray-500">Use arrow keys ↑↓ to navigate</div>
           </div>
         </ModalFooter>

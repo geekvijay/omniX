@@ -4,18 +4,16 @@ import * as commands from './commands';
 
 const searchQuery = (text: string) => chrome.search.query({ text });
 
-const commandsQuery = async (text: string) => {
-  const response = await commands.query(text);
-  return response;
-};
+const commandsQuery = async (text: string) => commands.query(text);
 
 const tabsQuery = async (text: string) => {
-  let tabs = await chrome.tabs.query(text ? { title: text } : {});
-  tabs = tabs.map((tab) => ({
+  const tabs = await chrome.tabs.query(text ? { title: text } : {});
+  return tabs.map((tab) => ({
     ...tab,
     message: { type: c.TABS_HIGHLIGHT, payload: tab },
+    type: 'tab',
+    description: 'Browser tab',
   }));
-  return tabs;
 };
 
 const tabsCurrent = async () => {
@@ -73,15 +71,15 @@ const bookmarksCreate = async () => {
 };
 
 const bookmarksQuery = async (text: string) => {
-  const query = text || {};
-  let bookmarks = await chrome.bookmarks.search(query);
-  bookmarks = bookmarks
+  const bookmarks = await chrome.bookmarks.search(text || {});
+  return bookmarks
     .filter((bookmark) => bookmark.url !== undefined)
     .map((bookmark) => ({
       ...bookmark,
       message: { type: c.TABS_CREATE, payload: bookmark.url },
+      type: 'bookmark',
+      description: 'Bookmark',
     }));
-  return bookmarks;
 };
 
 const windowsCreateIncognito = async () => {
@@ -137,7 +135,15 @@ const browsingDataRemovePasswords = async () => {
 const defaultQuery = async (text: string) => {
   const [tabs, commands, bookmarks] = await Promise.all([tabsQuery(text), commandsQuery(text), bookmarksQuery(text)]);
   const search = text
-    ? [{ title: text, message: { type: c.SEARCH_QUERY, payload: text }, description: 'Search for a query' }]
+    ? [
+        {
+          id: 0,
+          type: 'query',
+          title: text,
+          description: 'Search for a query',
+          message: { type: c.SEARCH_QUERY, payload: text },
+        },
+      ]
     : [];
   return [...search, ...tabs, ...commands, ...bookmarks];
 };

@@ -4,6 +4,8 @@ export type Message = {
 };
 
 export type Command = {
+  id: number;
+  type: string;
   title: string;
   description: string;
   message: Message;

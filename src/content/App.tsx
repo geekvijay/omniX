@@ -130,7 +130,9 @@ const App = () => {
                   <div>{item.title}</div>
                   <div className="omnix-text-sm omnix-text-gray-500">{item.description}</div>
                 </div>
-                <div className="omnix-text-sm omnix-text-gray-500">{item.type}</div>
+                <div className="omnix-rounded-md omnix-border omnix-border-transparent omnix-bg-slate-100 omnix-px-2.5 omnix-py-0.5 omnix-text-sm omnix-text-slate-600 omnix-shadow-sm omnix-transition-all">
+                  {item.type}
+                </div>
               </div>
             ))}
           </div>

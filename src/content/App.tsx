@@ -38,26 +38,25 @@ const App = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          setIndex((prevIndex) => (prevIndex >= items.length - 1 ? prevIndex : prevIndex + 1));
-          break;
-        case 'ArrowUp':
-          setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
-          break;
-        case 'Enter':
-          handleSelect(items[index]);
-          break;
-        default:
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [index, items, handleSelect]);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+    switch (e.key) {
+      case 'ArrowDown':
+        setIndex((prevIndex) => (prevIndex >= items.length - 1 ? prevIndex : prevIndex + 1));
+        break;
+      case 'ArrowUp':
+        setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
+        break;
+      case 'Enter':
+        handleSelect(items[index]);
+        break;
+      case 'Escape':
+        setOpen(false);
+        break;
+      default:
+        break;
+    }
+  };
 
   useEffect(() => {
     if (listRef.current) {
@@ -99,7 +98,14 @@ const App = () => {
 
   return (
     <>
-      <Modal open={open} onClose={() => setOpen(false)}>
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        onClick={(e) => {
+          inputRef.current?.focus();
+          e.stopPropagation();
+        }}
+      >
         <ModalHeader>
           <input
             type="text"
@@ -107,6 +113,7 @@ const App = () => {
             className="omnix-w-full omnix-bg-transparent omnix-outline-none"
             value={search}
             onChange={handleChange}
+            onKeyDown={handleKeyDown}
             ref={inputRef}
             autoFocus
           />
@@ -115,10 +122,15 @@ const App = () => {
           <div ref={listRef}>
             {items.map((item, i) => (
               <div
-                className={`omnix-p-2 ${index === i ? 'omnix-bg-blue-500' : 'omnix-bg-white'}`}
+                key={`${item.type}-${item.id}`}
+                className={`omnix-flex omnix-cursor-pointer omnix-items-center omnix-justify-between omnix-gap-2 omnix-border-l-4 omnix-border-solid omnix-p-2 ${index === i ? 'omnix-border-blue-500' : 'omnix-border-transparent'}`}
                 onClick={() => handleSelect(item)}
               >
-                {item.title}
+                <div className="omnix-flex omnix-flex-col">
+                  <div>{item.title}</div>
+                  <div className="omnix-text-sm omnix-text-gray-500">{item.description}</div>
+                </div>
+                <div className="omnix-text-sm omnix-text-gray-500">{item.type}</div>
               </div>
             ))}
           </div>

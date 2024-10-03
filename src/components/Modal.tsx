@@ -1,29 +1,21 @@
-import { useEffect } from 'react';
-
 type Props = {
   open: boolean;
   onClose: () => void;
+  onClick: (e: React.MouseEvent<HTMLDivElement>) => void;
   children: React.ReactNode;
 };
 
 const noop = () => {};
 
-const Modal = ({ open, onClose = noop, children }: Props) => {
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
-
+const Modal = ({ open, onClose = noop, onClick = noop, children }: Props) => {
   if (!open) return null;
 
-  if (!open) return null;
   return (
     <div
       onClick={onClose}
       className="omnix-fixed omnix-inset-0 omnix-z-[9999] omnix-flex omnix-items-center omnix-justify-center omnix-bg-black omnix-bg-opacity-50"
     >
-      <div onClick={(e) => e.stopPropagation()} className="omnix-flex omnix-flex-col omnix-rounded-md omnix-bg-white">
+      <div onClick={onClick} className="omnix-flex omnix-flex-col omnix-rounded-md omnix-bg-white">
         {children}
       </div>
     </div>

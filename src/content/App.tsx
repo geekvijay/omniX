@@ -10,6 +10,7 @@ const App = () => {
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const mouseMoveRef = useRef(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch({ type: c.DEFAULT_QUERY, payload: e.target.value });
@@ -43,9 +44,11 @@ const App = () => {
     switch (e.key) {
       case 'ArrowDown':
         setIndex((prevIndex) => (prevIndex >= items.length - 1 ? prevIndex : prevIndex + 1));
+        mouseMoveRef.current = false;
         break;
       case 'ArrowUp':
         setIndex((prevIndex) => (prevIndex <= 0 ? prevIndex : prevIndex - 1));
+        mouseMoveRef.current = false;
         break;
       case 'Enter':
         handleSelect(items[index]);
@@ -119,12 +122,13 @@ const App = () => {
           />
         </ModalHeader>
         <ModalContent>
-          <div ref={listRef}>
+          <div ref={listRef} onMouseMove={() => (mouseMoveRef.current = true)}>
             {items.map((item, i) => (
               <div
                 key={`${item.type}-${item.id}`}
                 className={`omnix-flex omnix-cursor-pointer omnix-items-center omnix-justify-between omnix-gap-2 omnix-border-l-4 omnix-border-solid omnix-p-2 ${index === i ? 'omnix-border-sky-500 omnix-bg-slate-100 dark:omnix-bg-slate-950' : 'omnix-border-transparent'}`}
                 onClick={() => handleSelect(item)}
+                onMouseEnter={() => mouseMoveRef.current && setIndex(i)}
               >
                 <div className="omnix-flex omnix-w-3/4 omnix-flex-col">
                   <div className="omnix-truncate">{item.title}</div>

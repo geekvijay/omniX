@@ -97,7 +97,7 @@ const App = () => {
   const dispatch = (message: Message) => chrome.runtime.sendMessage(message);
 
   return (
-    <>
+    <div className="omnix-dark omnix-text-left omnix-font-sans omnix-text-[16px] omnix-antialiased">
       <Modal
         open={open}
         onClose={() => setOpen(false)}
@@ -110,7 +110,7 @@ const App = () => {
           <input
             type="text"
             placeholder="Search"
-            className="omnix-w-full omnix-bg-transparent omnix-outline-none"
+            className="omnix-w-full omnix-bg-transparent omnix-text-lg omnix-outline-none"
             value={search}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
@@ -123,11 +123,11 @@ const App = () => {
             {items.map((item, i) => (
               <div
                 key={`${item.type}-${item.id}`}
-                className={`omnix-flex omnix-cursor-pointer omnix-items-center omnix-justify-between omnix-gap-2 omnix-border-l-4 omnix-border-solid omnix-p-2 ${index === i ? 'omnix-border-blue-500' : 'omnix-border-transparent'}`}
+                className={`omnix-flex omnix-cursor-pointer omnix-items-center omnix-justify-between omnix-gap-2 omnix-border-l-4 omnix-border-solid omnix-p-2 ${index === i ? 'omnix-border-sky-500 omnix-bg-slate-100 dark:omnix-bg-slate-950' : 'omnix-border-transparent'}`}
                 onClick={() => handleSelect(item)}
               >
-                <div className="omnix-flex omnix-flex-col">
-                  <div>{item.title}</div>
+                <div className="omnix-flex omnix-w-3/4 omnix-flex-col">
+                  <div className="omnix-truncate">{item.title}</div>
                   <div className="omnix-text-sm omnix-text-gray-500">{item.description}</div>
                 </div>
                 <div className="omnix-rounded-md omnix-border omnix-border-transparent omnix-bg-slate-100 omnix-px-2.5 omnix-py-0.5 omnix-text-sm omnix-text-slate-600 omnix-shadow-sm omnix-transition-all">
@@ -144,7 +144,7 @@ const App = () => {
           </div>
         </ModalFooter>
       </Modal>
-    </>
+    </div>
   );
 };
 

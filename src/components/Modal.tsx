@@ -15,7 +15,10 @@ const Modal = ({ open, onClose = noop, onClick = noop, children }: Props) => {
       onClick={onClose}
       className="omnix-fixed omnix-inset-0 omnix-z-[9999] omnix-flex omnix-items-center omnix-justify-center omnix-bg-black omnix-bg-opacity-50"
     >
-      <div onClick={onClick} className="omnix-flex omnix-flex-col omnix-rounded-md omnix-bg-white">
+      <div
+        onClick={onClick}
+        className="omnix-flex omnix-flex-col omnix-rounded-md omnix-bg-white omnix-text-slate-900 dark:omnix-bg-slate-900 dark:omnix-text-slate-200"
+      >
         {children}
       </div>
     </div>
@@ -27,11 +30,11 @@ const ModalContent = ({ children }: { children: React.ReactNode }) => {
 };
 
 const ModalHeader = ({ children }: { children: React.ReactNode }) => {
-  return <div className="omnix-rounded-t-md omnix-border-b omnix-p-4">{children}</div>;
+  return <div className="omnix-rounded-t-md omnix-border-b omnix-p-4 dark:omnix-border-slate-800">{children}</div>;
 };
 
 const ModalFooter = ({ children }: { children: React.ReactNode }) => {
-  return <div className="omnix-rounded-b-md omnix-border-t omnix-p-4">{children}</div>;
+  return <div className="omnix-rounded-b-md omnix-border-t omnix-p-4 dark:omnix-border-slate-800">{children}</div>;
 };
 
 export { Modal, ModalContent, ModalHeader, ModalFooter };

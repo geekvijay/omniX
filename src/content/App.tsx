@@ -62,6 +62,7 @@ const App = () => {
     if (open) {
       dispatch({ type: c.DEFAULT_QUERY });
       inputRef.current?.focus();
+    } else {
       setSearch('');
       setIndex(0);
     }

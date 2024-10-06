@@ -13,5 +13,5 @@
     "service_worker": "src/background.ts",
     "type": "module"
   },
-  "permissions": ["tabs", "activeTab", "search", "bookmarks", "browsingData"]
+  "permissions": ["tabs", "activeTab", "search", "bookmarks", "browsingData", "history"]
 }

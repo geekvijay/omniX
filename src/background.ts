@@ -25,9 +25,9 @@ const tabsCreate = async (url: string = 'about:blank') => {
   await chrome.tabs.create({ url });
 };
 
-const tabsRemove = async () => {
+const tabsRemove = async (id: string) => {
   const tab = await tabsCurrent();
-  chrome.tabs.remove(tab.id);
+  chrome.tabs.remove(id || tab.id);
 };
 
 const tabsDuplicate = async () => {
@@ -70,6 +70,10 @@ const bookmarksCreate = async () => {
   chrome.bookmarks.create({ title: tab.title, url: tab.url });
 };
 
+const bookmarksRemove = async (id: string) => {
+  chrome.bookmarks.remove(id);
+};
+
 const bookmarksQuery = async (text: string) => {
   const bookmarks = await chrome.bookmarks.search(text || {});
   return bookmarks
@@ -80,6 +84,16 @@ const bookmarksQuery = async (text: string) => {
       type: 'bookmark',
       description: 'Bookmark',
     }));
+};
+
+const historyQuery = async (text: string) => {
+  const history = await chrome.history.search({ text: text || '', maxResults: 0, startTime: 0 });
+  return history.map((history) => ({
+    ...history,
+    message: { type: c.TABS_CREATE, payload: history.url },
+    type: 'history',
+    description: history.url,
+  }));
 };
 
 const windowsCreateIncognito = async () => {
@@ -148,6 +162,11 @@ const defaultQuery = async (text: string) => {
   return [...search, ...tabs, ...commands, ...bookmarks];
 };
 
+const removeQuery = async (text: string) => {
+  const [tab, bookmarks] = await Promise.all([tabsQuery(text), bookmarksQuery(text)]);
+  return [...tab, ...bookmarks];
+};
+
 const dispatch = async (message: Message) => {
   const tab = await tabsCurrent();
   const response = await chrome.tabs.sendMessage(tab.id, message);
@@ -162,12 +181,32 @@ chrome.runtime.onMessage.addListener(async (message: Message, sender, sendRespon
   switch (message.type) {
     case c.DEFAULT_QUERY: {
       const payload = await defaultQuery(message.payload);
-      dispatch({ type: c.DEFAULT_QUERY_SUCCESS, payload });
+      dispatch({ type: c.QUERY_SUCCESS, payload });
       break;
     }
     case c.COMMANDS_QUERY: {
       const payload = await commandsQuery(message.payload);
-      dispatch({ type: c.COMMANDS_QUERY_SUCCESS, payload });
+      dispatch({ type: c.QUERY_SUCCESS, payload });
+      break;
+    }
+    case c.BOOKMARKS_QUERY: {
+      const payload = await bookmarksQuery(message.payload);
+      dispatch({ type: c.QUERY_SUCCESS, payload });
+      break;
+    }
+    case c.HISTORY_QUERY: {
+      const payload = await historyQuery(message.payload);
+      dispatch({ type: c.QUERY_SUCCESS, payload });
+      break;
+    }
+    case c.TABS_QUERY: {
+      const payload = await tabsQuery(message.payload);
+      dispatch({ type: c.QUERY_SUCCESS, payload });
+      break;
+    }
+    case c.REMOVE_QUERY: {
+      const payload = await removeQuery(message.payload);
+      dispatch({ type: c.QUERY_SUCCESS, payload });
       break;
     }
     case c.SEARCH_QUERY:
@@ -177,7 +216,7 @@ chrome.runtime.onMessage.addListener(async (message: Message, sender, sendRespon
       tabsCreate(message.payload);
       break;
     case c.TABS_REMOVE:
-      tabsRemove();
+      tabsRemove(message.payload);
       break;
     case c.TABS_DUPLICATE:
       tabsDuplicate();
@@ -202,6 +241,9 @@ chrome.runtime.onMessage.addListener(async (message: Message, sender, sendRespon
       break;
     case c.BOOKMARKS_CREATE:
       bookmarksCreate();
+      break;
+    case c.BOOKMARKS_REMOVE:
+      bookmarksRemove(message.payload);
       break;
     case c.WINDOWS_CREATE_INCOGNITO:
       windowsCreateIncognito();

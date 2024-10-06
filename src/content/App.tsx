@@ -4,21 +4,53 @@ import { List } from '../components/List';
 import { Message, Command } from '../types';
 import * as c from '../constants';
 
+const actions: Record<string, string> = {
+  '/actions': c.COMMANDS_QUERY,
+  '/bookmarks': c.BOOKMARKS_QUERY,
+  '/history': c.HISTORY_QUERY,
+  '/tabs': c.TABS_QUERY,
+  '/remove': c.REMOVE_QUERY,
+};
+
 const App = () => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [items, setItems] = useState<Command[]>([]);
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const actionRef = useRef<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    dispatch({ type: c.DEFAULT_QUERY, payload: e.target.value });
-    setSearch(e.target.value);
+    let value = e.target.value;
+    const actionKey = value.length > 1 && Object.keys(actions).find((key) => key.startsWith(value.substring(0, 2)));
+
+    if (actionKey && value.length == 2) {
+      actionRef.current = actionKey;
+      value = `${actionKey} `;
+      dispatch({ type: actions[actionKey] });
+    } else if (actionKey == value) {
+      actionRef.current = null;
+      value = '';
+      dispatch({ type: c.DEFAULT_QUERY });
+    } else if (actionKey) {
+      const payload = value.substring(actionKey.length + 1);
+      dispatch({ type: actions[actionKey], payload });
+    } else {
+      dispatch({ type: c.DEFAULT_QUERY, payload: value });
+    }
+
+    setSearch(value);
     setIndex(0);
   };
 
   const handleSelect = useCallback((item: Command) => {
     setOpen(false);
+
+    if (actionRef.current == '/remove') {
+      dispatch({ type: item.type == 'tab' ? c.TABS_REMOVE : c.BOOKMARKS_REMOVE, payload: item.id });
+      return;
+    }
+
     switch (item.message.type) {
       case c.BROWSER_FULLSCREEN:
         document.documentElement.requestFullscreen();
@@ -75,7 +107,7 @@ const App = () => {
         case c.TOGGLE_OMNIX:
           setOpen((prev) => !prev);
           break;
-        case c.DEFAULT_QUERY_SUCCESS:
+        case c.QUERY_SUCCESS:
           setItems(message.payload);
           break;
         default:
@@ -87,7 +119,10 @@ const App = () => {
     return () => chrome.runtime.onMessage.removeListener(handleMessage);
   }, []);
 
-  const dispatch = (message: Message) => chrome.runtime.sendMessage(message);
+  const dispatch = (message: Message) => {
+    console.log(message);
+    chrome.runtime.sendMessage(message);
+  };
 
   return (
     <div className="omnix-dark omnix-text-left omnix-font-sans omnix-text-[16px] omnix-antialiased">

@@ -9,22 +9,20 @@ interface Props {
 }
 
 export const List: React.FC<Props> = ({ items, index, handleSelect, setIndex }) => {
-  const mouseMoveRef = useRef(false);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    mouseMoveRef.current = false;
     listRef.current?.children[index]?.scrollIntoView({ block: 'nearest' });
   }, [index]);
 
   return (
-    <div ref={listRef} onMouseMove={() => (mouseMoveRef.current = true)}>
+    <div ref={listRef}>
       {items.map((item, i) => (
         <div
           key={`${item.type}-${item.id}`}
           className={`omnix-flex omnix-cursor-pointer omnix-items-center omnix-justify-between omnix-gap-2 omnix-border-l-4 omnix-border-solid omnix-p-2 ${index === i ? 'omnix-border-sky-500 omnix-bg-slate-100 dark:omnix-bg-slate-950' : 'omnix-border-transparent'}`}
           onClick={() => handleSelect(item)}
-          onMouseEnter={() => mouseMoveRef.current && setIndex(i)}
+          onMouseMove={() => setIndex(i)}
         >
           <div className="omnix-flex omnix-w-3/4 omnix-flex-col">
             <div className="omnix-truncate">{item.title}</div>

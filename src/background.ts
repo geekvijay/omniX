@@ -1,5 +1,4 @@
 import { Message } from './types';
-import * as c from './constants';
 import * as commands from './commands';
 
 const searchQuery = (text: string) => chrome.search.query({ text });
@@ -10,7 +9,7 @@ const tabsQuery = async (text: string) => {
   const tabs = await chrome.tabs.query(text ? { title: text } : {});
   return tabs.map((tab) => ({
     ...tab,
-    message: { type: c.TABS_HIGHLIGHT, payload: tab },
+    message: { type: 'TABS_HIGHLIGHT', payload: tab },
     type: 'tab',
     description: 'Browser tab',
   }));
@@ -80,7 +79,7 @@ const bookmarksQuery = async (text: string) => {
     .filter((bookmark) => bookmark.url !== undefined)
     .map((bookmark) => ({
       ...bookmark,
-      message: { type: c.TABS_CREATE, payload: bookmark.url },
+      message: { type: 'TABS_CREATE', payload: bookmark.url },
       type: 'bookmark',
       description: 'Bookmark',
     }));
@@ -90,7 +89,7 @@ const historyQuery = async (text: string) => {
   const history = await chrome.history.search({ text: text || '', maxResults: 0, startTime: 0 });
   return history.map((history) => ({
     ...history,
-    message: { type: c.TABS_CREATE, payload: history.url },
+    message: { type: 'TABS_CREATE', payload: history.url },
     type: 'history',
     description: history.url,
   }));
@@ -155,7 +154,7 @@ const defaultQuery = async (text: string) => {
           type: 'query',
           title: text,
           description: 'Search for a query',
-          message: { type: c.SEARCH_QUERY, payload: text },
+          message: { type: 'SEARCH_QUERY', payload: text },
         },
       ]
     : [];
@@ -173,99 +172,99 @@ const dispatch = async (message: Message) => {
 };
 
 chrome.action.onClicked.addListener(() => {
-  dispatch({ type: c.TOGGLE_OMNIX });
+  dispatch({ type: 'TOGGLE_OMNIX' });
 });
 
 chrome.runtime.onMessage.addListener(async (message: Message) => {
   switch (message.type) {
-    case c.DEFAULT_QUERY: {
+    case 'DEFAULT_QUERY': {
       const payload = await defaultQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.COMMANDS_QUERY: {
+    case 'COMMANDS_QUERY': {
       const payload = await commandsQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.BOOKMARKS_QUERY: {
+    case 'BOOKMARKS_QUERY': {
       const payload = await bookmarksQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.HISTORY_QUERY: {
+    case 'HISTORY_QUERY': {
       const payload = await historyQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.TABS_QUERY: {
+    case 'TABS_QUERY': {
       const payload = await tabsQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.REMOVE_QUERY: {
+    case 'REMOVE_QUERY': {
       const payload = await removeQuery(message.payload);
-      dispatch({ type: c.QUERY_SUCCESS, payload });
+      dispatch({ type: 'QUERY_SUCCESS', payload });
       break;
     }
-    case c.SEARCH_QUERY:
+    case 'SEARCH_QUERY':
       searchQuery(message.payload);
       break;
-    case c.TABS_CREATE:
+    case 'TABS_CREATE':
       tabsCreate(message.payload);
       break;
-    case c.TABS_REMOVE:
+    case 'TABS_REMOVE':
       tabsRemove(message.payload);
       break;
-    case c.TABS_DUPLICATE:
+    case 'TABS_DUPLICATE':
       tabsDuplicate();
       break;
-    case c.TABS_UPDATE_TOGGLE_PIN:
+    case 'TABS_UPDATE_TOGGLE_PIN':
       tabsUpdateTogglePin();
       break;
-    case c.TABS_UPDATE_TOGGLE_MUTE:
+    case 'TABS_UPDATE_TOGGLE_MUTE':
       tabsUpdateToggleMute();
       break;
-    case c.TABS_RELOAD:
+    case 'TABS_RELOAD':
       tabsReload();
       break;
-    case c.TABS_GO_BACK:
+    case 'TABS_GO_BACK':
       tabsGoBack();
       break;
-    case c.TABS_GO_FORWARD:
+    case 'TABS_GO_FORWARD':
       tabsGoForward();
       break;
-    case c.TABS_HIGHLIGHT:
+    case 'TABS_HIGHLIGHT':
       tabsHighlight(message.payload);
       break;
-    case c.BOOKMARKS_CREATE:
+    case 'BOOKMARKS_CREATE':
       bookmarksCreate();
       break;
-    case c.BOOKMARKS_REMOVE:
+    case 'BOOKMARKS_REMOVE':
       bookmarksRemove(message.payload);
       break;
-    case c.WINDOWS_CREATE_INCOGNITO:
+    case 'WINDOWS_CREATE_INCOGNITO':
       windowsCreateIncognito();
       break;
-    case c.WINDOWS_REMOVE:
+    case 'WINDOWS_REMOVE':
       windowsRemove();
       break;
-    case c.BROWSING_DATA_REMOVE_ALL:
+    case 'BROWSING_DATA_REMOVE_ALL':
       browsingDataRemoveAll();
       break;
-    case c.BROWSING_DATA_REMOVE_HISTORY:
+    case 'BROWSING_DATA_REMOVE_HISTORY':
       browsingDataRemoveHistory();
       break;
-    case c.BROWSING_DATA_REMOVE_COOKIES:
+    case 'BROWSING_DATA_REMOVE_COOKIES':
       browsingDataRemoveCookies();
       break;
-    case c.BROWSING_DATA_REMOVE_CACHE:
+    case 'BROWSING_DATA_REMOVE_CACHE':
       browsingDataRemoveCache();
       break;
-    case c.BROWSING_DATA_REMOVE_LOCAL_STORAGE:
+    case 'BROWSING_DATA_REMOVE_LOCAL_STORAGE':
       browsingDataRemoveLocalStorage();
       break;
-    case c.BROWSING_DATA_REMOVE_PASSWORDS:
+    case 'BROWSING_DATA_REMOVE_PASSWORDS':
       browsingDataRemovePasswords();
       break;
   }

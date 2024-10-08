@@ -1,5 +1,9 @@
+import { MESSAGE_TYPE } from './constants';
+
+export type MessageType = keyof typeof MESSAGE_TYPE;
+
 export type Message = {
-  type: string;
+  type: MessageType;
   payload?: any;
 };
 

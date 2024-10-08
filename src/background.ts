@@ -16,7 +16,7 @@ const tabsQuery = async (text: string) => {
   }));
 };
 
-const tabsCurrent = async () => {
+const tabsCurrent = async (): Promise<chrome.tabs.Tab> => {
   const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
   return tab;
 };
@@ -25,42 +25,42 @@ const tabsCreate = async (url: string = 'about:blank') => {
   await chrome.tabs.create({ url });
 };
 
-const tabsRemove = async (id: string) => {
-  const tab = await tabsCurrent();
-  chrome.tabs.remove(id || tab.id);
+const tabsRemove = async (id: number | undefined) => {
+  const tab = id ? ({ id } as chrome.tabs.Tab) : await tabsCurrent();
+  return tab.id && chrome.tabs.remove(tab.id);
 };
 
 const tabsDuplicate = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.duplicate(tab.id);
+  return tab.id && chrome.tabs.duplicate(tab.id);
 };
 
 const tabsUpdateTogglePin = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.update(tab.id, { pinned: !tab.pinned });
+  return tab.id && chrome.tabs.update(tab.id, { pinned: !tab.pinned });
 };
 
 const tabsUpdateToggleMute = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.update(tab.id, { muted: !tab.mutedInfo?.muted });
+  return tab.id && chrome.tabs.update(tab.id, { muted: !tab.mutedInfo?.muted });
 };
 
 const tabsReload = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.reload(tab.id);
+  return tab.id && chrome.tabs.reload(tab.id);
 };
 
 const tabsGoBack = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.goBack(tab.id);
+  return tab.id && chrome.tabs.goBack(tab.id);
 };
 
 const tabsGoForward = async () => {
   const tab = await tabsCurrent();
-  chrome.tabs.goForward(tab.id);
+  return tab.id && chrome.tabs.goForward(tab.id);
 };
 
-const tabsHighlight = async (tab) => {
+const tabsHighlight = async (tab: chrome.tabs.Tab) => {
   chrome.tabs.highlight({ tabs: tab.index, windowId: tab.windowId });
   chrome.windows.update(tab.windowId, { focused: true });
 };
@@ -75,7 +75,7 @@ const bookmarksRemove = async (id: string) => {
 };
 
 const bookmarksQuery = async (text: string) => {
-  const bookmarks = await chrome.bookmarks.search(text || {});
+  const bookmarks = await chrome.bookmarks.search(text ? { query: text } : {});
   return bookmarks
     .filter((bookmark) => bookmark.url !== undefined)
     .map((bookmark) => ({
@@ -169,15 +169,14 @@ const removeQuery = async (text: string) => {
 
 const dispatch = async (message: Message) => {
   const tab = await tabsCurrent();
-  const response = await chrome.tabs.sendMessage(tab.id, message);
-  return response;
+  return tab.id && chrome.tabs.sendMessage(tab.id, message);
 };
 
-chrome.action.onClicked.addListener((tab) => {
+chrome.action.onClicked.addListener(() => {
   dispatch({ type: c.TOGGLE_OMNIX });
 });
 
-chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (message: Message) => {
   switch (message.type) {
     case c.DEFAULT_QUERY: {
       const payload = await defaultQuery(message.payload);

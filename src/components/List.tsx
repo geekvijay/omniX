@@ -1,10 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { Command } from '../types';
+import { Item } from '../types';
 
 interface Props {
-  items: Command[];
+  items: Item[];
   index: number;
-  handleSelect: (item: Command) => void;
+  handleSelect: (item: Item) => void;
   setIndex: (index: number) => void;
 }
 
@@ -26,7 +26,7 @@ export const List: React.FC<Props> = ({ items, index, handleSelect, setIndex }) 
         >
           <div className="omnix-flex omnix-w-3/4 omnix-flex-col">
             <div className="omnix-truncate">{item.title}</div>
-            <div className="omnix-text-sm omnix-text-gray-500">{item.description}</div>
+            <div className="omnix-truncate omnix-text-sm omnix-text-gray-500">{item.description}</div>
           </div>
           <div className="omnix-rounded-md omnix-border omnix-border-transparent omnix-bg-slate-100 omnix-px-2.5 omnix-py-0.5 omnix-text-sm omnix-text-slate-600 omnix-shadow-sm omnix-transition-all">
             {item.type}

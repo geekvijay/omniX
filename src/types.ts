@@ -9,8 +9,13 @@ export type Message = {
 
 export type Command = {
   id: number;
-  type: string;
+  type: 'command';
   title: string;
   description: string;
   message: Message;
 };
+
+export type Tab = chrome.tabs.Tab & { message: Message; type: 'tab'; description: string };
+export type Bookmark = chrome.bookmarks.BookmarkTreeNode & { message: Message; type: 'bookmark'; description: string };
+export type History = chrome.history.HistoryItem & { message: Message; type: 'history'; description: string };
+export type Item = Command | Tab | Bookmark | History;

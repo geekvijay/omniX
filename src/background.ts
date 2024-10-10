@@ -1,11 +1,11 @@
-import { Message } from './types';
+import { Message, Tab, Bookmark, History, Item, Command } from './types';
 import * as commands from './commands';
 
 const searchQuery = (text: string) => chrome.search.query({ text });
 
-const commandsQuery = async (text: string) => commands.query(text);
+const commandsQuery = async (text: string): Promise<Command[]> => commands.query(text);
 
-const tabsQuery = async (text: string) => {
+const tabsQuery = async (text: string): Promise<Tab[]> => {
   const tabs = await chrome.tabs.query(text ? { title: text } : {});
   return tabs.map((tab) => ({
     ...tab,
@@ -73,7 +73,7 @@ const bookmarksRemove = async (id: string) => {
   chrome.bookmarks.remove(id);
 };
 
-const bookmarksQuery = async (text: string) => {
+const bookmarksQuery = async (text: string): Promise<Bookmark[]> => {
   const bookmarks = await chrome.bookmarks.search(text ? { query: text } : {});
   return bookmarks
     .filter((bookmark) => bookmark.url !== undefined)
@@ -85,13 +85,13 @@ const bookmarksQuery = async (text: string) => {
     }));
 };
 
-const historyQuery = async (text: string) => {
+const historyQuery = async (text: string): Promise<History[]> => {
   const history = await chrome.history.search({ text: text || '', maxResults: 0, startTime: 0 });
   return history.map((history) => ({
     ...history,
     message: { type: 'TABS_CREATE', payload: history.url },
     type: 'history',
-    description: history.url,
+    description: history.url || '',
   }));
 };
 
@@ -145,13 +145,13 @@ const browsingDataRemovePasswords = async () => {
   chrome.browsingData.removePasswords({ since: 0 });
 };
 
-const defaultQuery = async (text: string) => {
+const defaultQuery = async (text: string): Promise<Item[]> => {
   const [tabs, commands, bookmarks] = await Promise.all([tabsQuery(text), commandsQuery(text), bookmarksQuery(text)]);
-  const search = text
+  const search: Command[] = text
     ? [
         {
-          id: 0,
-          type: 'query',
+          id: -1,
+          type: 'command',
           title: text,
           description: 'Search for a query',
           message: { type: 'SEARCH_QUERY', payload: text },
@@ -161,7 +161,7 @@ const defaultQuery = async (text: string) => {
   return [...search, ...tabs, ...commands, ...bookmarks];
 };
 
-const removeQuery = async (text: string) => {
+const removeQuery = async (text: string): Promise<Item[]> => {
   const [tab, bookmarks] = await Promise.all([tabsQuery(text), bookmarksQuery(text)]);
   return [...tab, ...bookmarks];
 };

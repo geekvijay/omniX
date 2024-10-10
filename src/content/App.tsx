@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalFooter } from '../components/Modal';
 import { List } from '../components/List';
-import { Message, Command, MessageType } from '../types';
+import { Message, MessageType, Item } from '../types';
 
 const ACTIONS: Record<string, MessageType> = {
   '/actions': 'COMMANDS_QUERY',
@@ -14,7 +14,7 @@ const ACTIONS: Record<string, MessageType> = {
 const App = () => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [items, setItems] = useState<Command[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const actionRef = useRef<string | null>(null);
@@ -42,7 +42,7 @@ const App = () => {
     setIndex(0);
   };
 
-  const handleSelect = useCallback((item: Command) => {
+  const handleSelect = useCallback((item: Item) => {
     setOpen(false);
 
     if (actionRef.current == '/remove') {
